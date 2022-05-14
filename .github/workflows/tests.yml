@@ -105,5 +105,3 @@ jobs:
         uses: ./
         with:
           version: ${{ matrix.version }}
-
-      - run: mmock -h

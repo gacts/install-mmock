@@ -74,6 +74,8 @@ async function doInstall(version) {
         throw new Error('Unsupported distributive format')
     }
 
+    await io.rmRF(distPath)
+
     try {
       await cache.saveCache([pathToInstall], cacheKey)
     } catch (e) {
@@ -96,7 +98,20 @@ async function doCheck() {
     throw new Error('mmock binary file not found in $PATH')
   }
 
-  await exec.exec('mmock', ['-h'], {silent: true})
+  let output = ''
+
+  await exec.exec('mmock', ['-h'], {
+    silent: true,
+    ignoreReturnCode: true,
+    listeners: {
+      stdout: data => output += data.toString(),
+      stderr: data => output += data.toString(),
+    }
+  })
+
+  if (!output.toLowerCase().includes('mmock v')) {
+    throw new Error(`The output does not contain the required substring: ${output}`)
+  }
 
   core.setOutput('mmock-bin', mmockBinPath)
 
@@ -131,19 +146,19 @@ async function getLatestMMockVersion(githubAuthToken) {
  * @throws
  */
 function getMMockURI(platform, arch, version) {
-  let amd64suffix = ''
-
-  if (semver.gt(version, '3.0.0')) { // https://github.com/jmartin82/mmock/commit/e365c2ea0d111bfe15deb1e17087057f35b8510b
-    amd64suffix = 'x86_64'
-  } else {
-    amd64suffix = '64-bit'
-  }
+  const namingVersion = semver.lt(version, '3.0.1') ? 1 : 2;
 
   switch (platform) {
     case 'linux': {
       switch (arch) {
         case 'x64': // Amd64
-          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Linux_${amd64suffix}.tar.gz`
+          switch (namingVersion) {
+            case 1: // old
+              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_linux_64-bit.tar.gz`
+
+            case 2: // since 3.0.1
+              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Linux_x86_64.tar.gz`
+          }
       }
 
       throw new Error('Unsupported linux architecture')
@@ -152,7 +167,13 @@ function getMMockURI(platform, arch, version) {
     case 'darwin': {
       switch (arch) {
         case 'x64': // Amd64
-          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_${amd64suffix}.tar.gz`
+          switch (namingVersion) {
+            case 1: // old
+              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_macOS_64-bit.tar.gz`
+
+            case 2: // since 3.0.1
+              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_x86_64.tar.gz`
+          }
       }
 
       throw new Error('Unsupported MacOS architecture')
@@ -161,7 +182,13 @@ function getMMockURI(platform, arch, version) {
     case 'win32': {
       switch (arch) {
         case 'x64': // Amd64
-          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Windows_${amd64suffix}.zip`
+          switch (namingVersion) {
+            case 1: // old
+              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_windows_64-bit.tar.gz`
+
+            case 2: // since 3.0.1
+              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Windows_x86_64.zip`
+          }
       }
 
       throw new Error('Unsupported windows architecture')
