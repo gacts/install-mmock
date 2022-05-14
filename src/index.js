@@ -4,6 +4,7 @@ const github = require('@actions/github') // docs: https://github.com/actions/to
 const io = require('@actions/io') // docs: https://github.com/actions/toolkit/tree/main/packages/io
 const cache = require('@actions/cache') // docs: https://github.com/actions/toolkit/tree/main/packages/cache
 const exec = require('@actions/exec') // docs: https://github.com/actions/toolkit/tree/main/packages/exec
+const semver = require('semver') // docs: https://github.com/npm/node-semver#readme
 const path = require('path')
 const os = require('os')
 
@@ -130,11 +131,19 @@ async function getLatestMMockVersion(githubAuthToken) {
  * @throws
  */
 function getMMockURI(platform, arch, version) {
+  let amd64suffix = ''
+
+  if (semver.gt(version, '3.0.0')) { // https://github.com/jmartin82/mmock/commit/e365c2ea0d111bfe15deb1e17087057f35b8510b
+    amd64suffix = 'x86_64'
+  } else {
+    amd64suffix = '64-bit'
+  }
+
   switch (platform) {
     case 'linux': {
       switch (arch) {
         case 'x64': // Amd64
-          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Linux_x86_64.tar.gz`
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Linux_${amd64suffix}.tar.gz`
       }
 
       throw new Error('Unsupported linux architecture')
@@ -143,7 +152,7 @@ function getMMockURI(platform, arch, version) {
     case 'darwin': {
       switch (arch) {
         case 'x64': // Amd64
-          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_x86_64.tar.gz`
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_${amd64suffix}.tar.gz`
       }
 
       throw new Error('Unsupported MacOS architecture')
@@ -152,7 +161,7 @@ function getMMockURI(platform, arch, version) {
     case 'win32': {
       switch (arch) {
         case 'x64': // Amd64
-          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Windows_x86_64.zip`
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Windows_${amd64suffix}.zip`
       }
 
       throw new Error('Unsupported windows architecture')
