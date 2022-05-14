@@ -1,0 +1,24 @@
+name: Install MMock (cross-platform)
+description: Installs MMock binary file into your actions workflow
+
+inputs:
+  version:
+    description: MMock version
+    required: true
+    default: latest
+  github-token:
+    description: GitHub auth token. Since there's a default, this is typically not supplied by the user
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  mmock-bin:
+    description: Path to the MMock binary file
+
+runs:
+  using: node16
+  main: dist/index.js
+
+branding:
+  icon: compass
+  color: blue
