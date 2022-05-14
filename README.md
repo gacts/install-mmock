@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: gacts/install-mmock@v1 # Action page: <https://github.com/gacts/install-mmock>
         #with:
-        #  version: 1.2.0 # `latest` by default, but you can set a specific version to install, e.g.: `1.6.0`
+        #  version: 3.0.0 # `latest` by default, but you can set a specific version to install, e.g.: `1.6.0`
 
       - run: mmock -h # any mmock command can be executed
 ```
