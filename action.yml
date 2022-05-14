@@ -20,5 +20,5 @@ runs:
   main: dist/index.js
 
 branding:
-  icon: compass
-  color: blue
+  icon: monitor
+  color: orange
