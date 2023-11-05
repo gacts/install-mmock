@@ -21,7 +21,7 @@ Additionally, this action uses GitHub **caching mechanism** to speed up your wor
 ```yaml
 jobs:
   install-mmock:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: gacts/install-mmock@v1 # Action page: <https://github.com/gacts/install-mmock>
         #with:
