@@ -167,6 +167,10 @@ function getMMockURI(platform, arch, version) {
     case 'darwin': {
       switch (arch) {
         case 'x64': // Amd64
+          if (semver.gte(version, '4.0.0')) { // since 4.0.1 the naming has been changed
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Darwin_x86_64.tar.gz`
+          }
+
           switch (namingVersion) {
             case 1: // old
               return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_macOS_64-bit.tar.gz`
