@@ -3,15 +3,15 @@
 version: 2
 
 updates:
-  - package-ecosystem: github-actions
-    directory: /
-    groups:
-      any: {patterns: ['*']}
-    schedule: {interval: monthly}
-
   - package-ecosystem: npm
     directory: /
     groups:
-      production: {dependency-type: production}
-      development: {dependency-type: development}
+      npm-production: {dependency-type: production}
+      npm-development: {dependency-type: development}
+    schedule: {interval: monthly}
+
+  - package-ecosystem: github-actions
+    directory: /
+    groups:
+      github-actions: {patterns: ['*']}
     schedule: {interval: monthly}
