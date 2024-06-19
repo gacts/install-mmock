@@ -10,7 +10,7 @@ const os = require('os')
 
 // read action inputs
 const input = {
-  version: core.getInput('version', {required: true}).replace(/^v/, ''), // strip the 'v' prefix
+  version: core.getInput('version', {required: true}).replace(/^[vV]/, ''), // strip the 'v' prefix
   githubToken: core.getInput('github-token'),
 }
 
@@ -20,7 +20,8 @@ async function runAction() {
 
   if (input.version.toLowerCase() === 'latest') {
     core.debug('Requesting latest MMock version...')
-    version = await getLatestMMockVersion(input.githubToken)
+    version = await getLatestVersion(input.githubToken)
+    core.debug(`Latest version: ${version}`)
   } else {
     version = input.version
   }
@@ -47,6 +48,7 @@ async function doInstall(version) {
 
   core.info(`Version to install: ${version} (target directory: ${pathToInstall})`)
 
+  /** @type {string|undefined} */
   let restoredFromCache = undefined
 
   try {
@@ -55,18 +57,21 @@ async function doInstall(version) {
     core.warning(e)
   }
 
-  if (restoredFromCache !== undefined) { // cache HIT
+  if (restoredFromCache) { // cache HIT
     core.info(`👌 MMock restored from cache`)
   } else { // cache MISS
-    const distUri = getMMockURI(process.platform, process.arch, version)
-    const distPath = await tc.downloadTool(distUri)
+    const distUrl = getDistUrl(process.platform, process.arch, version)
+
+    core.debug(`Downloading mmock from ${distUrl}`)
+
+    const distPath = await tc.downloadTool(distUrl)
 
     switch (true) {
-      case distUri.endsWith('tar.gz'):
+      case distUrl.endsWith('tar.gz'):
         await tc.extractTar(distPath, pathToInstall)
         break
 
-      case distUri.endsWith('zip'):
+      case distUrl.endsWith('zip'):
         await tc.extractZip(distPath, pathToInstall)
         break
 
@@ -89,12 +94,12 @@ async function doInstall(version) {
 /**
  * @returns {Promise<void>}
  *
- * @throws
+ * @throws {Error} binary file not found in $PATH or version check failed
  */
 async function doCheck() {
-  const mmockBinPath = await io.which('mmock', true)
+  const binPath = await io.which('mmock', true)
 
-  if (mmockBinPath === "") {
+  if (binPath === "") {
     throw new Error('mmock binary file not found in $PATH')
   }
 
@@ -113,16 +118,17 @@ async function doCheck() {
     throw new Error(`The output does not contain the required substring: ${output}`)
   }
 
-  core.setOutput('mmock-bin', mmockBinPath)
+  core.setOutput('mmock-bin', binPath)
 
-  core.info(`MMock installed: ${mmockBinPath}`)
+  core.info(`MMock installed: ${binPath}`)
 }
 
 /**
  * @param {string} githubAuthToken
  * @returns {Promise<string>}
  */
-async function getLatestMMockVersion(githubAuthToken) {
+async function getLatestVersion(githubAuthToken) {
+  /** @type {import('@actions/github')} */
   const octokit = github.getOctokit(githubAuthToken)
 
   // docs: https://octokit.github.io/rest.js/v18#repos-get-latest-release
@@ -131,7 +137,7 @@ async function getLatestMMockVersion(githubAuthToken) {
     repo: 'mmock',
   })
 
-  return latest.data.tag_name.replace(/^v/, '') // strip the 'v' prefix
+  return latest.data.tag_name.replace(/^[vV]/, '') // strip the 'v' prefix
 }
 
 /**
@@ -143,63 +149,56 @@ async function getLatestMMockVersion(githubAuthToken) {
  *
  * @returns {string}
  *
- * @throws
+ * @throws {Error} Unsupported platform or architecture
  */
-function getMMockURI(platform, arch, version) {
-  const namingVersion = semver.lt(version, '3.0.1') ? 1 : 2;
+function getDistUrl(platform, arch, version) {
+  const before301 = semver.lt(version, '3.0.1') // the version is less than 3.0.1
+  const before400 = semver.lt(version, '4.0.0') // the version is less than 4.0.0
 
   switch (platform) {
     case 'linux': {
       switch (arch) {
         case 'x64': // Amd64
-          switch (namingVersion) {
-            case 1: // old
-              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_linux_64-bit.tar.gz`
-
-            case 2: // since 3.0.1
-              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Linux_x86_64.tar.gz`
+          if (before301) {
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_linux_64-bit.tar.gz`
           }
+
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Linux_x86_64.tar.gz`
       }
 
-      throw new Error('Unsupported linux architecture')
+      throw new Error(`Unsupported linux architecture (${arch})`)
     }
 
     case 'darwin': {
       switch (arch) {
         case 'x64': // Amd64
-          if (semver.gte(version, '4.0.0')) { // since 4.0.1 the naming has been changed
-            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Darwin_x86_64.tar.gz`
+          if (before301) {
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_macOS_64-bit.tar.gz`
+          } else if (before400) {
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_x86_64.tar.gz`
           }
 
-          switch (namingVersion) {
-            case 1: // old
-              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_macOS_64-bit.tar.gz`
-
-            case 2: // since 3.0.1
-              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_x86_64.tar.gz`
-          }
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Darwin_x86_64.tar.gz`
       }
 
-      throw new Error('Unsupported MacOS architecture')
+      throw new Error(`Unsupported MacOS architecture (${arch})`)
     }
 
     case 'win32': {
       switch (arch) {
         case 'x64': // Amd64
-          switch (namingVersion) {
-            case 1: // old
-              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_windows_64-bit.tar.gz`
-
-            case 2: // since 3.0.1
-              return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Windows_x86_64.zip`
+          if (before301) {
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_windows_64-bit.tar.gz`
           }
+
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Windows_x86_64.zip`
       }
 
-      throw new Error('Unsupported windows architecture')
+      throw new Error(`Unsupported windows architecture (${arch})`)
     }
   }
 
-  throw new Error('Unsupported OS (platform)')
+  throw new Error(`Unsupported platform (${platform})`)
 }
 
 // run the action
