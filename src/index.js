@@ -158,7 +158,20 @@ function getDistUrl(platform, arch, version) {
   switch (platform) {
     case 'linux': {
       switch (arch) {
-        case 'x64': // Amd64
+        case 'x64':
+          // v4.2.0 - mmock_Linux_x86_64.tar.gz
+          // v4.0.1 - mmock_Linux_x86_64.tar.gz
+          // v3.1.6 - mmock_Linux_x86_64.tar.gz
+          // v3.1.5 - mmock_Linux_x86_64.tar.gz
+          // v3.1.4 - mmock_Linux_x86_64.tar.gz
+          // v3.1.3 - mmock_Linux_x86_64.tar.gz
+          // v3.1.2 - mmock_Linux_x86_64.tar.gz
+          // v3.0.3 - mmock_Linux_x86_64.tar.gz
+          // v3.0.1 - mmock_Linux_x86_64.tar.gz
+          // v3.0.0 - mmock_3.0.0_linux_64-bit.tar.gz
+          // v2.7.9 - mmock_2.7.9_linux_64-bit.tar.gz
+          // v2.7.8 - mmock_2.7.8_linux_64-bit.tar.gz
+          // v2.7.7 - mmock_2.7.7_linux_64-bit.tar.gz
           if (before301) {
             return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_linux_64-bit.tar.gz`
           }
@@ -171,7 +184,20 @@ function getDistUrl(platform, arch, version) {
 
     case 'darwin': {
       switch (arch) {
-        case 'x64': // Amd64
+        case 'x64':
+          // v4.2.0 - mmock_Darwin_x86_64.tar.gz
+          // v4.0.1 - mmock_Darwin_x86_64.tar.gz
+          // v3.1.6 - mmock_macOS_x86_64.tar.gz
+          // v3.1.5 - mmock_macOS_x86_64.tar.gz
+          // v3.1.4 - mmock_macOS_x86_64.tar.gz
+          // v3.1.3 - mmock_macOS_x86_64.tar.gz
+          // v3.1.2 - mmock_macOS_x86_64.tar.gz
+          // v3.0.3 - mmock_macOS_x86_64.tar.gz
+          // v3.0.1 - mmock_macOS_x86_64.tar.gz
+          // v3.0.0 - mmock_3.0.0_macOS_64-bit.tar.gz
+          // v2.7.9 - mmock_2.7.9_macOS_64-bit.tar.gz
+          // v2.7.8 - mmock_2.7.8_macOS_64-bit.tar.gz
+          // v2.7.7 - mmock_2.7.7_macOS_64-bit.tar.gz
           if (before301) {
             return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_macOS_64-bit.tar.gz`
           } else if (before400) {
@@ -179,6 +205,28 @@ function getDistUrl(platform, arch, version) {
           }
 
           return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Darwin_x86_64.tar.gz`
+
+        case 'arm64':
+          // v4.2.0 - mmock_Darwin_arm64.tar.gz
+          // v4.0.1 - mmock_Darwin_arm64.tar.gz
+          // v3.1.6 - mmock_macOS_arm64.tar.gz
+          // v3.1.5 - mmock_macOS_arm64.tar.gz
+          // v3.1.4 - NONE
+          // v3.1.3 - mmock_macOS_arm64.tar.gz
+          // v3.1.2 - mmock_macOS_arm64.tar.gz
+          // v3.0.3 - NONE
+          // v3.0.1 - NONE
+          // v3.0.0 - NONE
+          // v2.7.9 - NONE
+          // v2.7.8 - NONE
+          // v2.7.7 - NONE
+          if (before301) {
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_macOS_arm64.tar.gz`
+          } else if (before400) {
+            return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_macOS_arm64.tar.gz`
+          }
+
+          return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_Darwin_arm64.tar.gz`
       }
 
       throw new Error(`Unsupported MacOS architecture (${arch})`)
@@ -186,7 +234,20 @@ function getDistUrl(platform, arch, version) {
 
     case 'win32': {
       switch (arch) {
-        case 'x64': // Amd64
+        case 'x64':
+          // v4.2.0 - mmock_Darwin_x86_64.tar.gz
+          // v4.0.1 - mmock_Darwin_x86_64.tar.gz
+          // v3.1.6 - mmock_Windows_x86_64.zip
+          // v3.1.5 - mmock_Windows_x86_64.zip
+          // v3.1.4 - mmock_Windows_x86_64.zip
+          // v3.1.3 - mmock_Windows_x86_64.zip
+          // v3.1.2 - mmock_Windows_x86_64.zip
+          // v3.0.3 - mmock_Windows_x86_64.zip
+          // v3.0.1 - mmock_Windows_x86_64.zip
+          // v3.0.0 - mmock_3.0.0_windows_64-bit.tar.gz
+          // v2.7.9 - mmock_2.7.9_windows_64-bit.tar.gz
+          // v2.7.8 - mmock_2.7.8_windows_64-bit.tar.gz
+          // v2.7.7 - mmock_2.7.7_windows_64-bit.tar.gz
           if (before301) {
             return `https://github.com/jmartin82/mmock/releases/download/v${version}/mmock_${version}_windows_64-bit.tar.gz`
           }
