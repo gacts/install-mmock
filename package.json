@@ -3,7 +3,7 @@
   "description": "Installs MMock binary file into your actions workflow",
   "main": "src/index.js",
   "scripts": {
-    "lint": "eslint --config package.json './src/**/*.js'",
+    "lint": "eslint './src/**/*.js'",
     "build": "ncc build src/index.js -o dist --minify --no-cache"
   },
   "repository": {
@@ -20,6 +20,7 @@
   "bugs": {
     "url": "https://github.com/gacts/install-mmock/issues"
   },
+  "type": "module",
   "homepage": "https://github.com/gacts/install-mmock#readme",
   "dependencies": {
     "@actions/cache": "^4.1.0",
@@ -31,19 +32,16 @@
     "semver": "^7.7.3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.0",
     "@vercel/ncc": "^0.38.4",
-    "eslint": "^8.57.1"
+    "eslint": "^9.39.0",
+    "globals": "^16.5.0"
   },
-  "eslintConfig": {
-    "env": {
-      "commonjs": true,
-      "es6": true,
-      "node": true
-    },
-    "extends": "eslint:recommended",
-    "parserOptions": {
-      "ecmaVersion": 2018
-    },
-    "rules": {}
+  "volta": {
+    "node": "24"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
