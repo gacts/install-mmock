@@ -1,17 +1,17 @@
-import * as core from '@actions/core' // docs: https://github.com/actions/toolkit/tree/main/packages/core
-import * as tc from '@actions/tool-cache' // docs: https://github.com/actions/toolkit/tree/main/packages/tool-cache
-import * as github from '@actions/github' // docs: https://github.com/actions/toolkit/tree/main/packages/github
-import * as io from '@actions/io' // docs: https://github.com/actions/toolkit/tree/main/packages/io
-import * as cache from '@actions/cache' // docs: https://github.com/actions/toolkit/tree/main/packages/cache
-import * as exec from '@actions/exec' // docs: https://github.com/actions/toolkit/tree/main/packages/exec
-import * as semver from 'semver' // docs: https://github.com/npm/node-semver#readme
-import * as path from 'path'
-import * as os from 'os'
+import {getInput, debug, startGroup, endGroup, info, warning, addPath, setOutput, setFailed} from '@actions/core' // docs: https://github.com/actions/toolkit/tree/main/packages/core
+import {downloadTool, extractTar, extractZip} from '@actions/tool-cache' // docs: https://github.com/actions/toolkit/tree/main/packages/tool-cache
+import {getOctokit} from '@actions/github' // docs: https://github.com/actions/toolkit/tree/main/packages/github
+import {rmRF, which} from '@actions/io' // docs: https://github.com/actions/toolkit/tree/main/packages/io
+import {restoreCache, saveCache} from '@actions/cache' // docs: https://github.com/actions/toolkit/tree/main/packages/cache
+import {exec} from '@actions/exec' // docs: https://github.com/actions/toolkit/tree/main/packages/exec
+import {lt} from 'semver' // docs: https://github.com/npm/node-semver#readme
+import {join} from 'path'
+import {tmpdir} from 'os'
 
 // read action inputs
 const input = {
-  version: core.getInput('version', {required: true}).replace(/^[vV]/, ''), // strip the 'v' prefix
-  githubToken: core.getInput('github-token'),
+  version: getInput('version', {required: true}).replace(/^[vV]/, ''), // strip the 'v' prefix
+  githubToken: getInput('github-token'),
 }
 
 // main action entrypoint
@@ -19,20 +19,20 @@ async function runAction() {
   let version
 
   if (input.version.toLowerCase() === 'latest') {
-    core.debug('Requesting latest MMock version...')
+    debug('Requesting latest MMock version...')
     version = await getLatestVersion(input.githubToken)
-    core.debug(`Latest version: ${version}`)
+    debug(`Latest version: ${version}`)
   } else {
     version = input.version
   }
 
-  core.startGroup('💾 Install MMock')
+  startGroup('💾 Install MMock')
   await doInstall(version)
-  core.endGroup()
+  endGroup()
 
-  core.startGroup('🧪 Installation check')
+  startGroup('🧪 Installation check')
   await doCheck()
-  core.endGroup()
+  endGroup()
 }
 
 /**
@@ -43,52 +43,52 @@ async function runAction() {
  * @throws
  */
 async function doInstall(version) {
-  const pathToInstall = path.join(os.tmpdir(), `mmock-${version}`)
+  const pathToInstall = join(tmpdir(), `mmock-${version}`)
   const cacheKey = `mmock-cache-${version}-${process.platform}-${process.arch}`
 
-  core.info(`Version to install: ${version} (target directory: ${pathToInstall})`)
+  info(`Version to install: ${version} (target directory: ${pathToInstall})`)
 
   /** @type {string|undefined} */
   let restoredFromCache = undefined
 
   try {
-    restoredFromCache = await cache.restoreCache([pathToInstall], cacheKey)
+    restoredFromCache = await restoreCache([pathToInstall], cacheKey)
   } catch (e) {
-    core.warning(e)
+    warning(e)
   }
 
   if (restoredFromCache) { // cache HIT
-    core.info(`👌 MMock restored from cache`)
+    info(`👌 MMock restored from cache`)
   } else { // cache MISS
     const distUrl = getDistUrl(process.platform, process.arch, version)
 
-    core.debug(`Downloading mmock from ${distUrl}`)
+    debug(`Downloading mmock from ${distUrl}`)
 
-    const distPath = await tc.downloadTool(distUrl)
+    const distPath = await downloadTool(distUrl)
 
     switch (true) {
       case distUrl.endsWith('tar.gz'):
-        await tc.extractTar(distPath, pathToInstall)
+        await extractTar(distPath, pathToInstall)
         break
 
       case distUrl.endsWith('zip'):
-        await tc.extractZip(distPath, pathToInstall)
+        await extractZip(distPath, pathToInstall)
         break
 
       default:
         throw new Error('Unsupported distributive format')
     }
 
-    await io.rmRF(distPath)
+    await rmRF(distPath)
 
     try {
-      await cache.saveCache([pathToInstall], cacheKey)
+      await saveCache([pathToInstall], cacheKey)
     } catch (e) {
-      core.warning(e)
+      warning(e)
     }
   }
 
-  core.addPath(pathToInstall)
+  addPath(pathToInstall)
 }
 
 /**
@@ -97,7 +97,7 @@ async function doInstall(version) {
  * @throws {Error} binary file not found in $PATH or version check failed
  */
 async function doCheck() {
-  const binPath = await io.which('mmock', true)
+  const binPath = await which('mmock', true)
 
   if (binPath === "") {
     throw new Error('mmock binary file not found in $PATH')
@@ -105,7 +105,7 @@ async function doCheck() {
 
   let output = ''
 
-  await exec.exec('mmock', ['-h'], {
+  await exec('mmock', ['-h'], {
     silent: true,
     ignoreReturnCode: true,
     listeners: {
@@ -118,9 +118,9 @@ async function doCheck() {
     throw new Error(`The output does not contain the required substring: ${output}`)
   }
 
-  core.setOutput('mmock-bin', binPath)
+  setOutput('mmock-bin', binPath)
 
-  core.info(`MMock installed: ${binPath}`)
+  info(`MMock installed: ${binPath}`)
 }
 
 /**
@@ -129,7 +129,7 @@ async function doCheck() {
  */
 async function getLatestVersion(githubAuthToken) {
   /** @type {import('@actions/github')} */
-  const octokit = github.getOctokit(githubAuthToken)
+  const octokit = getOctokit(githubAuthToken)
 
   // docs: https://octokit.github.io/rest.js/v18#repos-get-latest-release
   const latest = await octokit.rest.repos.getLatestRelease({
@@ -152,8 +152,8 @@ async function getLatestVersion(githubAuthToken) {
  * @throws {Error} Unsupported platform or architecture
  */
 function getDistUrl(platform, arch, version) {
-  const before301 = semver.lt(version, '3.0.1') // the version is less than 3.0.1
-  const before400 = semver.lt(version, '4.0.0') // the version is less than 4.0.0
+  const before301 = lt(version, '3.0.1') // the version is less than 3.0.1
+  const before400 = lt(version, '4.0.0') // the version is less than 4.0.0
 
   switch (platform) {
     case 'linux': {
@@ -266,5 +266,5 @@ function getDistUrl(platform, arch, version) {
 (async () => {
   await runAction()
 })().catch(error => {
-  core.setFailed(error.message)
+  setFailed(error.message)
 })
