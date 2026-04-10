@@ -1,10 +1,10 @@
-import core from '@actions/core' // docs: https://github.com/actions/toolkit/tree/main/packages/core
-import tc from '@actions/tool-cache' // docs: https://github.com/actions/toolkit/tree/main/packages/tool-cache
-import github from '@actions/github' // docs: https://github.com/actions/toolkit/tree/main/packages/github
-import io from '@actions/io' // docs: https://github.com/actions/toolkit/tree/main/packages/io
-import cache from '@actions/cache' // docs: https://github.com/actions/toolkit/tree/main/packages/cache
-import exec from '@actions/exec' // docs: https://github.com/actions/toolkit/tree/main/packages/exec
-import semver from 'semver' // docs: https://github.com/npm/node-semver#readme
+import * as core from '@actions/core' // docs: https://github.com/actions/toolkit/tree/main/packages/core
+import * as tc from '@actions/tool-cache' // docs: https://github.com/actions/toolkit/tree/main/packages/tool-cache
+import * as github from '@actions/github' // docs: https://github.com/actions/toolkit/tree/main/packages/github
+import * as io from '@actions/io' // docs: https://github.com/actions/toolkit/tree/main/packages/io
+import * as cache from '@actions/cache' // docs: https://github.com/actions/toolkit/tree/main/packages/cache
+import * as exec from '@actions/exec' // docs: https://github.com/actions/toolkit/tree/main/packages/exec
+import * as semver from 'semver' // docs: https://github.com/npm/node-semver#readme
 import path from 'path'
 import os from 'os'
 
