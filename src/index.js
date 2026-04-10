@@ -5,8 +5,8 @@ import * as io from '@actions/io' // docs: https://github.com/actions/toolkit/tr
 import * as cache from '@actions/cache' // docs: https://github.com/actions/toolkit/tree/main/packages/cache
 import * as exec from '@actions/exec' // docs: https://github.com/actions/toolkit/tree/main/packages/exec
 import * as semver from 'semver' // docs: https://github.com/npm/node-semver#readme
-import path from 'path'
-import os from 'os'
+import * as path from 'path'
+import * as os from 'os'
 
 // read action inputs
 const input = {
